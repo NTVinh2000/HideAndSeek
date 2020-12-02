@@ -1,0 +1,10 @@
+GBFS
+find hider
+find annoucement
+mark annoucement
+find path to hider (A*)
+find path to annoucement (A*)
+game flow
+
+find best position
+hider move

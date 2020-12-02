@@ -7,18 +7,22 @@ class Seeker:
     icon = pygame.transform.scale(pygame.image.load('characterIcon/dog.png'), (SQUARE_SIZE - 1, SQUARE_SIZE - 1))
 
     def __init__(self):
-        self.Sx = 1
-        self.Sy = 1
+        self.Sx = -1
+        self.Sy = -1
         self.vision = []
         self.top, self.left, self.bottom, self.right = 0, 0, 0, 0
         self.radius = 3
         self.movement = 1
 
     def update(self, newCor, map):
-        map[self.Sx][self.Sy] = 0
+        if self.Sx != -1:
+            map[self.Sx][self.Sy] = 0
         self.Sx = newCor[0]
         self.Sy = newCor[1]
         map[self.Sx][self.Sy] = 3
+
+        self.visionScopeUpdate(map)
+        self.visibleUpdate()
 
     def drawSeeker(self, win):
         win.blit(Seeker.icon, (self.Sy * SQUARE_SIZE, self.Sx * SQUARE_SIZE))
@@ -59,17 +63,6 @@ class Seeker:
 
 
         return explored
-
-
-
-    def drawVison(self, win, map):
-        explored = self.visionScope(map)
-        for i in explored:
-            if i[0] == self.Sx and i[1] == self.Sy:
-                continue
-
-            #pygame.time.delay(300)
-            pygame.draw.rect(win, PINK, (i[1] * SQUARE_SIZE, i[0] * SQUARE_SIZE + 1, SQUARE_SIZE - 1, SQUARE_SIZE - 1))
     '''
 
     def visionScopeUpdate(self, map):
@@ -91,6 +84,10 @@ class Seeker:
 
         self.vision = []
 
+        '''print('This is current map')
+        for jk in map:
+            print(jk)
+        '''
         for i in range(self.top, self.bottom + 1):
             temp = list(map[i])
             self.vision.append(temp[self.left : self.right + 1])
@@ -133,7 +130,7 @@ class Seeker:
                                 self.vision[i - 1][k] = COVERED
                                 coverRate = 1
                                 for e in range(2, i + 1):
-                                    if e % (abs(center[0] - i) + 1) == 0:
+                                    if abs(center[0] - i) == 0 or e % (abs(center[0] - i)) == 0:
                                         coverRate += 1
                                     if self.isValidInVision(i - e, k):
                                         self.vision[i - e][k] = COVERED
@@ -160,7 +157,7 @@ class Seeker:
                                 self.vision[i + 1][k] = COVERED
                                 coverRate = 1
                                 for e in range(2, len(self.vision) - i):
-                                    if e % (abs(center[0] - i) + 1) == 0:
+                                    if abs(center[0] - i) == 0 or e % (abs(center[0] - i)) == 0:
                                         coverRate += 1
                                     if self.isValidInVision(i + e, k):
                                         self.vision[i + e][k] = COVERED
@@ -190,7 +187,7 @@ class Seeker:
                                 self.vision[i][k - 1] = COVERED
                                 coverRate = 1
                                 for e in range(2, k + 1):
-                                    if e % (abs(center[1] - k) + 1) == 0:
+                                    if abs(center[1] - k) == 0 or e % (abs(center[1] - k)) == 0:
                                         coverRate += 1
                                     if self.isValidInVision(i, k - e):
                                         self.vision[i][k - e] = COVERED
@@ -216,7 +213,7 @@ class Seeker:
                                 self.vision[i][k + 1] = COVERED
                                 coverRate = 1
                                 for e in range(2, len(self.vision[0]) - k):
-                                    if e % (abs(center[1] - k) + 1) == 0:
+                                    if abs(center[1] - k) == 0 or e % (abs(center[1] - k)) == 0:
                                         coverRate += 1
                                     if self.isValidInVision(i, k + e):
                                         self.vision[i][k + e] = COVERED
@@ -472,6 +469,7 @@ class Seeker:
                                         self.vision[i + 1][k] = COVERED
                                         exV = 1
                                         coverRate = 1
+                                        conflict = 0
                                         for e in range(1, len(self.vision) - i):
                                             for temp in range(coverRate):
                                                 if self.isValidInVision(i + e, k + temp + exV):
@@ -485,6 +483,9 @@ class Seeker:
                                                     coverRate -= 1
                                             else:
                                                 exV = 0
+                                                if conflict < 1:
+                                                    coverRate += 1
+                                                    conflict +=1
                                             coverRate += 1
                                     else:
                                         if not (self.isValidInVision(i, k + 1)): continue
@@ -504,6 +505,7 @@ class Seeker:
                                                     coverRate -= 1
                                             else:
                                                 exV = 0
+                                                coverRate += 1
                                             coverRate += 1
                                     #print("I was here quarter 4")
 
@@ -513,38 +515,6 @@ class Seeker:
             visibleNarrow += 1
 
         #print("I was here final")
-
-        '''
-        # check conflict 2 wall
-        if self.vision[center[0] - 1][center[1]] == 1:
-            if self.vision[center[0] - 1][center[1] + 1] == 1:
-                if self.isValidInVision(center[0] - 2, center[1] + 1):
-                    self.vision[center[0] - 2][center[1] + 1] = -1
-            if self.vision[center[0] - 1][center[1] - 1] == 1:
-                if self.isValidInVision(center[0] - 2, center[1] - 1):
-                    self.vision[center[0] - 2][center[1] - 1] = -1
-        if self.vision[center[0] + 1][center[1]] == 1:
-            if self.vision[center[0] + 1][center[1] + 1] == 1:
-                if self.isValidInVision(center[0] + 2, center[1] + 1):
-                    self.vision[center[0] + 2][center[1] + 1] = -1
-            if self.vision[center[0] + 1][center[1] - 1] == 1:
-                if self.isValidInVision(center[0] + 2, center[1] - 1):
-                    self.vision[center[0] + 2][center[1] - 1] = -1
-        if self.vision[center[0]][center[1] - 1] == 1:
-            if self.vision[center[0] - 1][center[1] - 1] == 1:
-                if self.isValidInVision(center[0] - 1, center[1] - 2):
-                    self.vision[center[0] - 1][center[1] - 2] = -1
-            if self.vision[center[0] + 1][center[1] - 1] == 1:
-                if self.isValidInVision(center[0] + 1, center[1] - 2):
-                    self.vision[center[0] + 1][center[1] - 2] = -1
-        if self.vision[center[0]][center[1] + 1] == 1:
-            if self.vision[center[0] - 1][center[1] + 1] == 1:
-                if self.isValidInVision(center[0] - 1, center[1] + 2):
-                    self.vision[center[0] - 1][center[1] + 2] = -1
-            if self.vision[center[0] + 1][center[1] + 1] == 1:
-                if self.isValidInVision(center[0] + 1, center[1] + 2):
-                    self.vision[center[0] + 1][center[1] + 2] = -1
-        '''
 
 
     def isValidInVision(self, row, col):
@@ -556,6 +526,15 @@ class Seeker:
         count = 0
         for row in self.vision:
             count += row.count(VISIBLE)
+
+        '''
+        for i in range(, self.Sx + self.movement + 1):
+            for j in range(self.Sy - self.movement, self.Sy + self.movement + 1):
+                if self.top <= i <= self.bottom \
+                        and self.left <= j <= self.right:
+                    if self.vision[i - self.top][j - self.left] == 0:
+                        count -= 1
+        '''
         return count
 
     def drawVison(self, win, map):
@@ -581,7 +560,13 @@ class Seeker:
 
 
     def valueInVision(self,row, col):
-        return self.vision[row - self.top][col - self.right]
+        return self.vision[row - self.top][col - self.left]
+
+    def visited(self, visitedList, cor):
+        for visit in visitedList:
+            if cor == visit:
+                return True
+        return False
 
     def randomMove(self, oldMove, map):
         dummy = Seeker()
@@ -591,27 +576,33 @@ class Seeker:
         for i in self.vision:
             print(i)
         #print('\n')
-        print(oldMove[0], oldMove[1])
+        print(self.Sx, self.Sy)
+        #print(oldMove1[0], oldMove1[1])
+        #print(oldMove2[0], oldMove2[1])
         for i in range(self.Sx - self.movement, self.Sx + self.movement + 1):
             for j in range(self.Sy - self.movement, self.Sy + self.movement + 1):
-                print('I consider a move', i, j)
                 if self.top <= i <= self.bottom \
                         and self.left <= j <= self.right \
-                        and (i != oldMove[0] or j != oldMove[1]):
+                        and not(self.visited(oldMove, [i, j])) \
+                        and (i != self.Sx or j != self.Sy):
 
+                    print('I consider a move', i, j)
+                    print(self.valueInVision(i, j), self.Sx - self.top, self.Sy - self.left, i - self.top, j- self.left)
                     if self.valueInVision(i, j) == VISIBLE:
-                        print(self.valueInVision(i, j), i, j)
+                        #print(self.valueInVision(i, j), i, j)
                         dummy.Sx = i
                         dummy.Sy = j
                         dummy.visionScopeUpdate(map)
                         dummy.visibleUpdate()
                         heuristic = dummy.randomHeuristic()
-                        print('I consider a move', i, j)
+                        print('H = ', heuristic)
                         if heuristic > max:
-                            print('I got a move')
+                            max = heuristic
+                            #print('I got a move')
+                            #print(i, j)
                             nextMove[0] = i
                             nextMove[1] = j
 
         '''and i != self.Sx and j != self.Sy '''
-        print(nextMove[0], nextMove[1])
+        #print(nextMove[0], nextMove[1])
         return nextMove

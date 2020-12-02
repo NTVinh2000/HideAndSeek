@@ -16,10 +16,21 @@ from hider import Hider
 #    print(i)
 #print(hiderList[0].Hx, hiderList[0].Hy)
 
+def pause():
+    pause = True
+    while pause:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:
+                    pause = False
+
 def main():
     board = Board()
     seeker = Seeker()
-    #seeker.update(mapInfo[1][0], mapInfo[0])
+    seeker.update(mapInfo[1][0], mapInfo[0])
     hiderList = []
     for i in range(len(mapInfo[2])):
         hiderList.append(Hider())
@@ -56,19 +67,18 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:
+                    pause()
 
         #move
         seekerOldMove.append(seekerNewMove)
-        if len(seekerOldMove) > 3:
-            seekerOldMove.pop(0)
+        #if len(seekerOldMove) > 4:
+        #    seekerOldMove.pop(0)
         #print(seekerOldMove)
-        seekerNewMove = seeker.randomMove(seekerOldMove[0], mapInfo[0])
+        seekerNewMove = seeker.randomMove(seekerOldMove, mapInfo[0])
         seeker.update(seekerNewMove, mapInfo[0])
         #seeker.randomMove([0, 0])
-        seeker.visionScopeUpdate(mapInfo[0])
-        seeker.visibleUpdate()
-
-
 
         #draw
         board.draw_board(WIN, mapInfo[0])
