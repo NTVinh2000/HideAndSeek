@@ -1,6 +1,6 @@
 import pygame
 from constants import *
-mapInfo = load_map('map/map1.txt')
+mapInfo = load_map('map/map2.txt')
 from constants import *
 from board import Board
 from seeker import Seeker
@@ -30,6 +30,7 @@ def pause():
 def main():
     board = Board()
     seeker = Seeker()
+    seeker.build_visitMap(mapInfo[0])
     seeker.update(mapInfo[1][0], mapInfo[0])
     hiderList = []
     for i in range(len(mapInfo[2])):
@@ -83,7 +84,7 @@ def main():
         #draw
         board.draw_board(WIN, mapInfo[0])
         seeker.drawVison(WIN, mapInfo[0])
-        pygame.time.wait(1000)
+        pygame.time.wait(150)
         seeker.drawSeeker(WIN)
 
         for i in range(len(hiderList)):
