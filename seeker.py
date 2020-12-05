@@ -1,5 +1,6 @@
 import pygame
 from constants import *
+import numpy as np
 
 
 class Seeker:
@@ -14,21 +15,122 @@ class Seeker:
         self.radius = 3
         self.movement = 1
         self.visitMap = []
-        self.currentTime = 0
+        self.currentTime = 1
+        self.Shortest_path = np.zeros((ROW,COL,ROW,COL))
+        #print(self.Shortest_path.shape)
+        #print('ROW {} COL {}'.format(ROW,COL))
+        for u in range(ROW-2):
+            for v in range(COL-2):
+                for x in range(ROW-2):
+                    for t in range(COL-2):
+                        self.Shortest_path[u+1][v+1][x+1][t+1] = -1
 
     #Build a sub map to mark visited tile
     #This map will include values to calculate heuristic
     def build_visitMap(self, map):
-        for i in map:
-            self.visitMap.append(list(i))
+        #for i in map:
+        #    self.visitMap.append(list(i))
+        self.visitMap = np.zeros((ROW,COL))
+        self.visitMap[self.Sx][self.Sy]=1
 
 
     #Mark seen titles by assigning current time value
     def mark_visitMap(self):
         for row in range(self.top, self.bottom + 1):
             for col in range(self.left, self.right + 1):
-                if self.vision[row - self.top][col - self.left] == VISIBLE:
+                if self.vision[row - self.top][col - self.left] == VISIBLE or self.vision[row - self.top][col - self.left] == HIDER_ID:
                     self.visitMap[row][col] = self.currentTime
+
+    
+    def BreathFirstSearch(self, posNow, queue, prev, map):
+        Ix = [-1, -1, -1, 0, 1, 1,  1,  0]
+        Iy = [-1,  0,  1, 1, 1, 0, -1, -1]
+
+        while queue.shape[0] != 0:
+            queue = queue.reshape((-1,3))
+            cur = [0,0]
+            dis = 0
+            #print(queue)
+            (cur[0],cur[1],dis) = queue[0][:]
+            queue = np.delete(queue,0,0)
+            for i in range(8):
+                newPosX = cur[0] + Ix[i]
+                newPosY = cur[1] + Iy[i]
+                if (newPosX < 1 or newPosX > ROW-2 or newPosY < 1 or newPosY > COL-2):
+                    continue
+                if (map[newPosX][newPosY] == 1):
+                    continue
+                if (prev[newPosX][newPosY][0]==0 and prev[newPosX][newPosY][1] == 0):
+                    prev[newPosX][newPosY][:]= [cur[0],cur[1]]
+                    queue = np.append(queue, [(newPosX, newPosY, dis+1)])
+                    if (self.visitMap[newPosX][newPosY] == 0):
+                        print('{} {} return'.format(newPosX,newPosY))
+                        return (newPosX,newPosY)
+        return None
+
+
+    def getPathToUnvisited(self, map):
+        #trả lại list các tuble các vị trí đi đến ô unvisited gần nhất
+        #nếu không có trả lại None
+        #code bug, please không sử dụng
+        #print('{} {} ok ?'.format(ROW,COL))
+        prev = np.zeros((ROW,COL,2))
+        prev[self.Sx][self.Sy][:] = [self.Sx,self.Sy]
+        queue = np.array([(self.Sx,self.Sy,0)])
+        new_pos = self.BreathFirstSearch([self.Sx,self.Sy], queue, prev, map)
+        if (new_pos is None):
+            return None
+        print(new_pos)
+        result = []
+        (curX,curY) = new_pos
+        while(curX != self.Sx or curY != self.Sy):
+            #print(curX,curY,prev[curX][curY])
+            result.append((curX,curY))
+            tmpX = int(prev[curX][curY][0])
+            tmpY = int(prev[curX][curY][1])
+            curX = tmpX
+            curY = tmpY
+        
+        #result.append((curX, curY))
+        #result.reverse()
+        #print('{} {}'.format(self.Sx,self.Sy))
+        #print(result[0])
+        #print('ok')
+        return result[-1]
+
+    def BFS_for_shortest(self, begin, queue, map):
+        Ix = [-1, -1, -1, 0, 1, 1,  1,  0]
+        Iy = [-1,  0,  1, 1, 1, 0, -1, -1]
+
+        while queue.shape[0] != 0:
+            queue = queue.reshape((-1,3))
+            cur = [0,0]
+            dis = 0
+            #print(queue)
+            (cur[0],cur[1],dis) = queue[0][:]
+            queue = np.delete(queue,0,0)
+            for i in range(8):
+                newPosX = cur[0] + Ix[i]
+                newPosY = cur[1] + Iy[i]
+                if (newPosX < 1 or newPosX > ROW-2 or newPosY < 1 or newPosY > COL-2):
+                    continue
+                if (map[newPosX][newPosY] == 1):
+                    continue
+                if (self.Shortest_path[begin[0]][begin[1]][newPosX][newPosY] == -1):
+                    self.Shortest_path[begin[0]][begin[1]][newPosX][newPosY] = dis+1
+                    queue = np.append(queue, [(newPosX, newPosY, dis+1)])
+
+
+
+    # trả lại bảng shortest_path[Row][Col][Row][Col]
+    def Create_Shortest_path_table(self, map):
+        print('ROW {} COL {}'.format(ROW,COL))
+        for i in range(ROW-2):
+            for j in range(COL-2):
+                queue = np.array([(i+1,j+1,0)])
+                self.Shortest_path[i+1][j+1][i+1][j+1] = 0
+                self.BFS_for_shortest([i+1,j+1],queue,map)
+                print('finish {} {}'.format(i+1,j+1))
 
 
     #update position of seeker in origin map
@@ -80,20 +182,24 @@ class Seeker:
         for row in self.vision:
             count += row.count(VISIBLE)
         '''
-
+        zero_cnt = 0
         count = 0
         for row in range(self.top, self.bottom + 1):
             for col in range(self.left, self.right + 1):
                 if self.vision[row - self.top][col - self.left] != VISIBLE:
                     continue
                 count += currentTime - visitMap[row][col]
+                if (visitMap[row][col] == 0):
+                    zero_cnt+=1
 
-        return count
+        return (count,zero_cnt)
 
     #find next move
     def randomMove(self, map):
+        #self.getPathToUnvisited(map)
         dummy = Seeker()
         max = -1
+        max_zero = 0
         nextMove = [self.Sx, self.Sy]
 
         #for i in self.vision:
@@ -113,14 +219,18 @@ class Seeker:
                         dummy.Sy = j
                         dummy.visionScopeUpdate(map)
                         dummy.visibleUpdate()
-                        heuristic = dummy.randomHeuristic(self.currentTime, self.visitMap)
+                        (heuristic,zero_cnt) = dummy.randomHeuristic(self.currentTime, self.visitMap)
 
                         #print('H = ', heuristic)
+                        if (zero_cnt>max_zero):
+                            max_zero = zero_cnt
+
                         if heuristic > max:
                             max = heuristic
                             nextMove[0] = i
                             nextMove[1] = j
-
+        if (max_zero == 0):
+            nextMove = self.getPathToUnvisited(map)
         #print('i got move', nextMove[0], nextMove[1])
         #print('current time :', self.currentTime)
         return nextMove

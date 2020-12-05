@@ -73,6 +73,9 @@ def main():
         #if len(seekerOldMove) > 4:
         #    seekerOldMove.pop(0)
         seekerNewMove = seeker.randomMove(mapInfo[0])
+        if (seekerNewMove is None):
+            print('game over')
+            return
         seeker.update(seekerNewMove, mapInfo[0])
 
         #draw
