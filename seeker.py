@@ -38,7 +38,7 @@ class Seeker:
     def mark_visitMap(self):
         for row in range(self.top, self.bottom + 1):
             for col in range(self.left, self.right + 1):
-                if self.vision[row - self.top][col - self.left] == VISIBLE:
+                if self.vision[row - self.top][col - self.left] == VISIBLE or self.vision[row - self.top][col - self.left] == HIDER_ID:
                     self.visitMap[row][col] = self.currentTime
 
     
