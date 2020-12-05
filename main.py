@@ -1,6 +1,6 @@
 import pygame
 from constants import *
-mapInfo = load_map('map/map2.txt')
+mapInfo = load_map('map/map3.txt')
 from constants import *
 from board import Board
 from seeker import Seeker
