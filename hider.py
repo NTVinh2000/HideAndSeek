@@ -180,6 +180,44 @@ class Hider:
             temp = list(map[i])
             self.vision.append(temp[self.left: self.right + 1])
 
+
+    def cleanUpAnnounce(self, map):
+        if len(self.announcePos) > 0:
+            map[self.announcePos[0]][self.announcePos[1]] = 0
+
+    def announce(self,win,map):
+        self.cleanUpAnnounce(map)
+        self.announcePos = []
+        if len(self.announcePos) == 0:
+            for i in range(self.Sx-3,self.Sx+3):
+                for j in range(self.Sy-3,self.Sy+3):
+                    if  i > 1 and i < len(map) -1 and j > 1 and j < len(map[0]) -1:
+                        if map[i][j] == 0:
+                            self.CoveredList.add((i,j))
+
+            """
+            for i in range(self.Sx-3,self.Sx+3):
+                for j in range(self.Sy-3,self.Sy+3):
+                    if i > 1 and i < len(map) - 1 and j > 1 and j < len(map[0]) - 1:
+                        if map[i][j] == 3:
+                            self.announcePos = random.sample(self.CoveredList,1)[0]
+                            map[self.announcePos[0]][self.announcePos[1]] = 5
+                            print("Announce at:",self.announcePos)
+                            return
+            """
+            self.announcePos = random.sample(self.CoveredList, 1)[0]
+            map[self.announcePos[0]][self.announcePos[1]] = 5
+            print("Announce at:", self.announcePos)
+            return
+
+    def drawAnnounce(self,win):
+        if len(self.announcePos)>0:
+            win.blit(Hider.iconAnnounce, (self.announcePos[1] * SQUARE_SIZE, self.announcePos[0] * SQUARE_SIZE))
+
+    def cleanUpAnnounce(self,map):
+        if len(self.announcePos) > 0:
+            map[self.announcePos[0]][self.announcePos[1]] = 0
+
     # check which tiles are VISIBLE(0) and mark COVERED(-1) tiles
     def visibleUpdate(self):
         # (i, k): i row, k column
@@ -605,57 +643,3 @@ class Hider:
                                 # print("I was here quarter 4")
 
         # print("I was here final")
-        def announce(self, win, map):
-            if len(self.announcePos) == 0:
-                for i in range(self.Hx - 3, self.Hx + 3):
-                    for j in range(self.Hy - 3, self.Hy + 3):
-                        if i > 1 and i < len(map) - 1 and j > 1 and j < len(map[0]) - 1:
-                            if map[i][j] == 0:
-                                self.CoveredList.add((i, j))
-
-                for i in range(self.Hx - 3, self.Hx + 3):
-                    for j in range(self.Hy - 3, self.Hy + 3):
-                        if i > 1 and i < len(map) - 1 and j > 1 and j < len(map[0]) - 1:
-                            if map[i][j] == 3:
-                                self.announcePos = random.sample(self.CoveredList, 1)[0]
-                                map[self.announcePos[0]][self.announcePos[1]] = 5
-                                print("Announce at:", self.announcePos)
-                                return
-
-        def drawAnnounce(self, win):
-            if len(self.announcePos) > 0:
-                win.blit(Hider.iconAnnounce, (self.announcePos[1] * SQUARE_SIZE, self.announcePos[0] * SQUARE_SIZE))
-
-        def cleanUpAnnounce(self, map):
-            if len(self.announcePos) > 0:
-                map[self.announcePos[0]][self.announcePos[1]] = 0
-    def announce(self,win,map):
-        if len(self.announcePos) == 0:
-            for i in range(self.Sx-3,self.Sx+3):
-                for j in range(self.Sy-3,self.Sy+3):
-                    if  i > 1 and i < len(map) -1 and j > 1 and j < len(map[0]) -1:
-                        if map[i][j] == 0:
-                            self.CoveredList.add((i,j))
-
-            """
-            for i in range(self.Sx-3,self.Sx+3):
-                for j in range(self.Sy-3,self.Sy+3):
-                    if i > 1 and i < len(map) - 1 and j > 1 and j < len(map[0]) - 1:
-                        if map[i][j] == 3:
-                            self.announcePos = random.sample(self.CoveredList,1)[0]
-                            map[self.announcePos[0]][self.announcePos[1]] = 5
-                            print("Announce at:",self.announcePos)
-                            return
-            """
-            self.announcePos = random.sample(self.CoveredList, 1)[0]
-            map[self.announcePos[0]][self.announcePos[1]] = 5
-            print("Announce at:", self.announcePos)
-            return
-
-    def drawAnnounce(self,win):
-        if len(self.announcePos)>0:
-            win.blit(Hider.iconAnnounce, (self.announcePos[1] * SQUARE_SIZE, self.announcePos[0] * SQUARE_SIZE))
-
-    def cleanUpAnnounce(self,map):
-        if len(self.announcePos) > 0:
-            map[self.announcePos[0]][self.announcePos[1]] = 0
