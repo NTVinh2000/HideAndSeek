@@ -134,13 +134,18 @@ def main():
 
 
         #draw
+        #draw board
         board.draw_board(WIN, mapInfo[0])
+        #draw vision
         seeker.drawVison(WIN, mapInfo[0])
+        for i in range(len(hiderList)):
+            hiderList[i].drawVison(WIN, mapInfo[0], seeker)
+
+        #draw agents
         seeker.drawSeeker(WIN)
-
-
         for i in range(len(hiderList)):
             hiderList[i].drawHider(WIN)
+
         #for i in seeker.vision:
         #    print(i)
         #print("X of seeker:", seeker.Sx)
@@ -151,7 +156,7 @@ def main():
 
 
         pygame.display.update()
-        pygame.time.wait(50)
+        pygame.time.wait(100)
 
     pygame.quit()
 
