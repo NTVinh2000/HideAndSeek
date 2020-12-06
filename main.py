@@ -90,12 +90,12 @@ def main():
                     for curY in range(hiderList[i].Sy-2, hiderList[i].Sy+3):
                         if (curX < 1 or curX > ROW - 2 or curY < 1 or curY > COL - 2):
                             continue
-                        if (mapInfo[0][curX][curY]==3):
+                        if (hiderList[i].valueInVision(curX,curY) == 3):
                             danger = 1
                 if (danger):
                     new_move = hiderList[i].run(mapInfo[0])
-                    randVal = randint(0, 100)
-                    if (randVal%2):
+                    randVal = randint(0, 10000)
+                    if (randVal%2 == 0):
                         new_move = (hiderList[i].Sx,hiderList[i].Sy)
                     hiderList[i].update(new_move,mapInfo[0])
 
@@ -140,8 +140,8 @@ def main():
                     i.announce(mapInfo[0])
             #seekerNewMove = seeker.randomMove(mapInfo[0])
             if (seekerNewMove is None):
-                print('game over')
-                return
+                seeker.build_visitMap(mapInfo[0])
+                seekerNewMove = (seeker.Sx,seeker.Sy)
 
             seeker.update(seekerNewMove, mapInfo[0])
             seeker.findHider()
