@@ -4,7 +4,6 @@ import numpy as np
 
 
 class Seeker:
-
     icon = pygame.transform.scale(pygame.image.load('characterIcon/dog.png'), (SQUARE_SIZE - 1, SQUARE_SIZE - 1))
 
     def __init__(self):
@@ -16,36 +15,112 @@ class Seeker:
         self.movement = 1
         self.visitMap = []
         self.currentTime = 1
-        self.Shortest_path = np.zeros((ROW,COL,ROW,COL))
-        #print(self.Shortest_path.shape)
-        #print('ROW {} COL {}'.format(ROW,COL))
-        for u in range(ROW-2):
-            for v in range(COL-2):
-                for x in range(ROW-2):
-                    for t in range(COL-2):
-                        self.Shortest_path[u+1][v+1][x+1][t+1] = -1
+        self.Shortest_path = np.zeros((ROW, COL, ROW, COL))
+        self.hiderPositionList = []  # save list of hiders position have been found
+        # print(self.Shortest_path.shape)
+        # print('ROW {} COL {}'.format(ROW,COL))
 
-    #Build a sub map to mark visited tile
-    #This map will include values to calculate heuristic
+
+    # Build a sub map to mark visited tile
+    # This map will include values to calculate heuristic
     def build_visitMap(self, map):
-        #for i in map:
+        # for i in map:
         #    self.visitMap.append(list(i))
-        self.visitMap = np.zeros((ROW,COL))
-        self.visitMap[self.Sx][self.Sy]=1
+        self.visitMap = np.zeros((ROW, COL))
+        self.visitMap[self.Sx][self.Sy] = 1
 
-
-    #Mark seen titles by assigning current time value
+    # Mark seen titles by assigning current time value
     def mark_visitMap(self):
         for row in range(self.top, self.bottom + 1):
             for col in range(self.left, self.right + 1):
-                if self.vision[row - self.top][col - self.left] == VISIBLE or self.vision[row - self.top][col - self.left] == HIDER_ID:
+                if self.vision[row - self.top][col - self.left] == VISIBLE or self.vision[row - self.top][
+                    col - self.left] == HIDER_ID:
                     self.visitMap[row][col] = self.currentTime
 
-    
     def BreathFirstSearch(self, posNow, queue, prev, map):
+        Ix = [-1, -1, -1, 0, 1, 1, 1, 0]
+        Iy = [-1, 0, 1, 1, 1, 0, -1, -1]
+
+        while queue.shape[0] != 0:
+            queue = queue.reshape((-1, 3))
+            cur = [0, 0]
+            dis = 0
+            # print(queue)
+            (cur[0], cur[1], dis) = queue[0][:]
+            queue = np.delete(queue, 0, 0)
+            for i in range(8):
+                newPosX = cur[0] + Ix[i]
+                newPosY = cur[1] + Iy[i]
+                if (newPosX < 1 or newPosX > ROW - 2 or newPosY < 1 or newPosY > COL - 2):
+                    continue
+                if (map[newPosX][newPosY] == 1):
+                    continue
+                if (prev[newPosX][newPosY][0] == 0 and prev[newPosX][newPosY][1] == 0):
+                    prev[newPosX][newPosY][:] = [cur[0], cur[1]]
+                    queue = np.append(queue, [(newPosX, newPosY, dis + 1)])
+                    if (self.visitMap[newPosX][newPosY] == 0):
+                        print('{} {} return'.format(newPosX, newPosY))
+                        return (newPosX, newPosY)
+        return None
+
+    def getPathToUnvisited(self, map):
+        # trả lại list các tuble các vị trí đi đến ô unvisited gần nhất
+        # nếu không có trả lại None
+        # code bug, please không sử dụng
+        # print('{} {} ok ?'.format(ROW,COL))
+        prev = np.zeros((ROW, COL, 2))
+        prev[self.Sx][self.Sy][:] = [self.Sx, self.Sy]
+        queue = np.array([(self.Sx, self.Sy, 0)])
+        new_pos = self.BreathFirstSearch([self.Sx, self.Sy], queue, prev, map)
+        if (new_pos is None):
+            return None
+        print(new_pos)
+        result = []
+        (curX, curY) = new_pos
+        while (curX != self.Sx or curY != self.Sy):
+            # print(curX,curY,prev[curX][curY])
+            result.append((curX, curY))
+            tmpX = int(prev[curX][curY][0])
+            tmpY = int(prev[curX][curY][1])
+            curX = tmpX
+            curY = tmpY
+
+        # result.append((curX, curY))
+        # result.reverse()
+        # print('{} {}'.format(self.Sx,self.Sy))
+        # print(result[0])
+        # print('ok')
+        return result[-1]
+
+    def BFS_for_shortest(self, begin, queue, map):
+        Ix = [-1, -1, -1, 0, 1, 1, 1, 0]
+        Iy = [-1, 0, 1, 1, 1, 0, -1, -1]
+
+        while queue.shape[0] != 0:
+            queue = queue.reshape((-1, 3))
+            cur = [0, 0]
+            dis = 0
+            # print(queue)
+            (cur[0], cur[1], dis) = queue[0][:]
+            queue = np.delete(queue, 0, 0)
+            for i in range(8):
+                newPosX = cur[0] + Ix[i]
+                newPosY = cur[1] + Iy[i]
+                if (newPosX < 1 or newPosX > ROW - 2 or newPosY < 1 or newPosY > COL - 2):
+                    continue
+                if (map[newPosX][newPosY] == 1):
+                    continue
+                if (self.Shortest_path[begin[0]][begin[1]][newPosX][newPosY] == -1):
+                    self.Shortest_path[begin[0]][begin[1]][newPosX][newPosY] = dis + 1
+                    queue = np.append(queue, [(newPosX, newPosY, dis + 1)])
+
+    #return path from begin to end
+    def FromStartToEnd(self, begin, end, map):
         Ix = [-1, -1, -1, 0, 1, 1,  1,  0]
         Iy = [-1,  0,  1, 1, 1, 0, -1, -1]
-
+        queue = np.array([(begin[0],begin[1],0)])
+        prev = np.zeros((ROW,COL,2))
+        prev[begin[0]][begin[1]][:] = [begin[0],begin[1]]
         while queue.shape[0] != 0:
             queue = queue.reshape((-1,3))
             cur = [0,0]
@@ -53,6 +128,7 @@ class Seeker:
             #print(queue)
             (cur[0],cur[1],dis) = queue[0][:]
             queue = np.delete(queue,0,0)
+            #print(cur[0],cur[1])
             for i in range(8):
                 newPosX = cur[0] + Ix[i]
                 newPosY = cur[1] + Iy[i]
@@ -63,79 +139,35 @@ class Seeker:
                 if (prev[newPosX][newPosY][0]==0 and prev[newPosX][newPosY][1] == 0):
                     prev[newPosX][newPosY][:]= [cur[0],cur[1]]
                     queue = np.append(queue, [(newPosX, newPosY, dis+1)])
-                    if (self.visitMap[newPosX][newPosY] == 0):
-                        print('{} {} return'.format(newPosX,newPosY))
-                        return (newPosX,newPosY)
-        return None
+                    if (newPosX == end[0] and newPosY == end[1]):
+                        curX = int(newPosX)
+                        curY = int(newPosY)
+                        res = []
+                        while(curX != begin[0] or curY != begin[1]):
+                            res.append((curX,curY))
+                            tmpX = prev[curX][curY][0]
+                            tmpY = prev[curX][curY][1]
+                            curX = int(tmpX)
+                            curY = int(tmpY)
+                        res.append((curX,curY))
+                        res.reverse()
+                        res = np.array(res)
 
-
-    def getPathToUnvisited(self, map):
-        #trả lại list các tuble các vị trí đi đến ô unvisited gần nhất
-        #nếu không có trả lại None
-        #code bug, please không sử dụng
-        #print('{} {} ok ?'.format(ROW,COL))
-        prev = np.zeros((ROW,COL,2))
-        prev[self.Sx][self.Sy][:] = [self.Sx,self.Sy]
-        queue = np.array([(self.Sx,self.Sy,0)])
-        new_pos = self.BreathFirstSearch([self.Sx,self.Sy], queue, prev, map)
-        if (new_pos is None):
-            return None
-        print(new_pos)
-        result = []
-        (curX,curY) = new_pos
-        while(curX != self.Sx or curY != self.Sy):
-            #print(curX,curY,prev[curX][curY])
-            result.append((curX,curY))
-            tmpX = int(prev[curX][curY][0])
-            tmpY = int(prev[curX][curY][1])
-            curX = tmpX
-            curY = tmpY
-        
-        #result.append((curX, curY))
-        #result.reverse()
-        #print('{} {}'.format(self.Sx,self.Sy))
-        #print(result[0])
-        #print('ok')
-        return result[-1]
-
-    def BFS_for_shortest(self, begin, queue, map):
-        Ix = [-1, -1, -1, 0, 1, 1,  1,  0]
-        Iy = [-1,  0,  1, 1, 1, 0, -1, -1]
-
-        while queue.shape[0] != 0:
-            queue = queue.reshape((-1,3))
-            cur = [0,0]
-            dis = 0
-            #print(queue)
-            (cur[0],cur[1],dis) = queue[0][:]
-            queue = np.delete(queue,0,0)
-            for i in range(8):
-                newPosX = cur[0] + Ix[i]
-                newPosY = cur[1] + Iy[i]
-                if (newPosX < 1 or newPosX > ROW-2 or newPosY < 1 or newPosY > COL-2):
-                    continue
-                if (map[newPosX][newPosY] == 1):
-                    continue
-                if (self.Shortest_path[begin[0]][begin[1]][newPosX][newPosY] == -1):
-                    self.Shortest_path[begin[0]][begin[1]][newPosX][newPosY] = dis+1
-                    queue = np.append(queue, [(newPosX, newPosY, dis+1)])
-
-
-
+                        return res.tolist()
     # trả lại bảng shortest_path[Row][Col][Row][Col]
+
     def Create_Shortest_path_table(self, map):
-        print('ROW {} COL {}'.format(ROW,COL))
-        for i in range(ROW-2):
-            for j in range(COL-2):
-                queue = np.array([(i+1,j+1,0)])
-                self.Shortest_path[i+1][j+1][i+1][j+1] = 0
-                self.BFS_for_shortest([i+1,j+1],queue,map)
-                print('finish {} {}'.format(i+1,j+1))
+        print('ROW {} COL {}'.format(ROW, COL))
+        for i in range(ROW - 2):
+            for j in range(COL - 2):
+                queue = np.array([(i + 1, j + 1, 0)])
+                self.Shortest_path[i + 1][j + 1][i + 1][j + 1] = 0
+                self.BFS_for_shortest([i + 1, j + 1], queue, map)
+                print('finish {} {}'.format(i + 1, j + 1))
 
-
-    #update position of seeker in origin map
-    #including update vision scope, update vision
-    #this function increases current time by 1 and mark visitMap
+    # update position of seeker in origin map
+    # including update vision scope, update vision
+    # this function increases current time by 1 and mark visitMap
     def update(self, newCor, map):
         if self.Sx != -1:
             map[self.Sx][self.Sy] = 0
@@ -148,9 +180,8 @@ class Seeker:
         self.currentTime += 1
         self.mark_visitMap()
 
-
-    #take vision region of seeker
-    #this function update vision scope
+    # take vision region of seeker
+    # this function update vision scope
     def visionScopeUpdate(self, map):
         if self.Sx - self.radius >= 0:
             self.top = self.Sx - self.radius
@@ -172,10 +203,9 @@ class Seeker:
 
         for i in range(self.top, self.bottom + 1):
             temp = list(map[i])
-            self.vision.append(temp[self.left : self.right + 1])
+            self.vision.append(temp[self.left: self.right + 1])
 
-
-    #caculate heuristic
+    # caculate heuristic
     def randomHeuristic(self, currentTime, visitMap):
         '''
         count = 0
@@ -190,21 +220,21 @@ class Seeker:
                     continue
                 count += currentTime - visitMap[row][col]
                 if (visitMap[row][col] == 0):
-                    zero_cnt+=1
+                    zero_cnt += 1
 
-        return (count,zero_cnt)
+        return (count, zero_cnt)
 
-    #find next move
+    # find next move
     def randomMove(self, map):
-        #self.getPathToUnvisited(map)
+        # self.getPathToUnvisited(map)
         dummy = Seeker()
         max = -1
         max_zero = 0
         nextMove = [self.Sx, self.Sy]
 
-        #for i in self.vision:
+        # for i in self.vision:
         #    print(i)
-        #print(self.Sx, self.Sy)
+        # print(self.Sx, self.Sy)
 
         for i in range(self.Sx - self.movement, self.Sx + self.movement + 1):
             for j in range(self.Sy - self.movement, self.Sy + self.movement + 1):
@@ -212,17 +242,17 @@ class Seeker:
                         and self.left <= j <= self.right \
                         and (i != self.Sx or j != self.Sy):
 
-                    #print('I consider a move', i, j)
-                    #print(self.valueInVision(i, j), self.Sx - self.top, self.Sy - self.left, i - self.top, j- self.left)
+                    # print('I consider a move', i, j)
+                    # print(self.valueInVision(i, j), self.Sx - self.top, self.Sy - self.left, i - self.top, j- self.left)
                     if self.valueInVision(i, j) == VISIBLE:
                         dummy.Sx = i
                         dummy.Sy = j
                         dummy.visionScopeUpdate(map)
                         dummy.visibleUpdate()
-                        (heuristic,zero_cnt) = dummy.randomHeuristic(self.currentTime, self.visitMap)
+                        (heuristic, zero_cnt) = dummy.randomHeuristic(self.currentTime, self.visitMap)
 
-                        #print('H = ', heuristic)
-                        if (zero_cnt>max_zero):
+                        # print('H = ', heuristic)
+                        if (zero_cnt > max_zero):
                             max_zero = zero_cnt
 
                         if heuristic > max:
@@ -231,14 +261,9 @@ class Seeker:
                             nextMove[1] = j
         if (max_zero == 0):
             nextMove = self.getPathToUnvisited(map)
-        #print('i got move', nextMove[0], nextMove[1])
-        #print('current time :', self.currentTime)
+        # print('i got move', nextMove[0], nextMove[1])
+        # print('current time :', self.currentTime)
         return nextMove
-
-
-
-
-
 
     '''--------------------------------------------------------------------------------------------------------------'''
 
@@ -279,9 +304,9 @@ class Seeker:
     def valueInVision(self, row, col):
         return self.vision[row - self.top][col - self.left]
 
-    #check which tiles are VISIBLE(0) and mark COVERED(-1) tiles
+    # check which tiles are VISIBLE(0) and mark COVERED(-1) tiles
     def visibleUpdate(self):
-        #(i, k): i row, k column
+        # (i, k): i row, k column
         center = self.getSeekerInVision()
         visibleTop = center[0]
         visibleBottom = center[0]
@@ -289,7 +314,8 @@ class Seeker:
         visibleRight = center[1]
         visibleNarrow = 1
 
-        while visibleTop > 0 or visibleBottom < len(self.vision) - 1 or visibleLeft > 0 or visibleRight < len(self.vision[0]) - 1:
+        while visibleTop > 0 or visibleBottom < len(self.vision) - 1 or visibleLeft > 0 or visibleRight < len(
+                self.vision[0]) - 1:
             if self.isValidInVision(center[0] - visibleNarrow, 0):
                 visibleTop = center[0] - visibleNarrow
             if self.isValidInVision(center[0] + visibleNarrow, 0):
@@ -299,8 +325,8 @@ class Seeker:
             if self.isValidInVision(0, center[1] + visibleNarrow):
                 visibleRight = center[1] + visibleNarrow
 
-            #print("I was here befor checking")
-            #print(center, visibleNarrow, visibleTop, visibleBottom, len(self.vision) - 1, visibleLeft, visibleRight, len(self.vision[0]) - 1)
+            # print("I was here befor checking")
+            # print(center, visibleNarrow, visibleTop, visibleBottom, len(self.vision) - 1, visibleLeft, visibleRight, len(self.vision[0]) - 1)
             for i in range(visibleTop, visibleBottom + 1):
                 for k in range(visibleLeft, visibleRight + 1):
 
@@ -362,7 +388,7 @@ class Seeker:
                                                 self.vision[center[0] + 1][center[1] - 1] == HIDER_ID:
                                             if self.isValidInVision(center[0] + 2, center[1] - 1):
                                                 self.vision[center[0] + 2][center[1] - 1] = COVERED
-                            #print("I was here vertical")
+                            # print("I was here vertical")
 
                         # horizontal
                         elif i == center[0]:
@@ -418,7 +444,7 @@ class Seeker:
                                                 self.vision[center[0] + 1][center[1] + 1] == HIDER_ID:
                                             if self.isValidInVision(center[0] + 1, center[1] + 2):
                                                 self.vision[center[0] + 1][center[1] + 2] = COVERED
-                            #print("I was here horizontal")
+                            # print("I was here horizontal")
 
                         # diagonal quarter-2-4
                         elif i - k == center[0] - center[1]:
@@ -466,7 +492,7 @@ class Seeker:
                                     for eC in range(k + 1, len(self.vision[0])):
                                         self.vision[eR][eC] = COVERED
                                 '''
-                            #print("I was here diagonal 2 4")
+                            # print("I was here diagonal 2 4")
 
                         # diagonal quarter-1-3
                         elif i + k == center[0] + center[1]:
@@ -514,7 +540,7 @@ class Seeker:
                                     for eC in range(0, k):
                                         self.vision[eR][eC] = COVERED
                                 '''
-                            #print("I was here diagonal 1 3")
+                            # print("I was here diagonal 1 3")
 
                         # other
                         else:
@@ -542,7 +568,7 @@ class Seeker:
                                                 exV = 0
                                                 if conflict < 1:
                                                     coverRate += 1
-                                                    conflict +=1
+                                                    conflict += 1
                                             coverRate += 1
                                     else:
                                         if not (self.isValidInVision(i, k + 1)): continue
@@ -566,9 +592,9 @@ class Seeker:
                                                 exV = 0
                                                 if conflict < 1:
                                                     coverRate += 1
-                                                    conflict +=1
+                                                    conflict += 1
                                             coverRate += 1
-                                    #print("I was here quarter 1")
+                                    # print("I was here quarter 1")
                                 # quater 2
                                 else:
                                     if k - i > center[1] - center[0]:
@@ -592,7 +618,7 @@ class Seeker:
                                                 exV = 0
                                                 if conflict < 1:
                                                     coverRate += 1
-                                                    conflict +=1
+                                                    conflict += 1
                                             coverRate += 1
                                     else:
                                         if not (self.isValidInVision(i, k - 1)): continue
@@ -615,14 +641,14 @@ class Seeker:
                                                 exV = 0
                                                 if conflict < 1:
                                                     coverRate += 1
-                                                    conflict +=1
+                                                    conflict += 1
                                             coverRate += 1
-                                #print("I was here quarter 2")
+                                # print("I was here quarter 2")
                             else:
                                 # quater 3
                                 if k < center[1]:
                                     if i + k > center[0] + center[1]:
-                                        if not(self.isValidInVision(i+1, k)): continue
+                                        if not (self.isValidInVision(i + 1, k)): continue
 
                                         self.vision[i + 1][k] = COVERED
                                         exV = 1
@@ -643,7 +669,7 @@ class Seeker:
                                                 exV = 0
                                                 if conflict < 1:
                                                     coverRate += 1
-                                                    conflict +=1
+                                                    conflict += 1
                                             coverRate += 1
                                     else:
                                         if not (self.isValidInVision(i, k - 1)): continue
@@ -666,9 +692,9 @@ class Seeker:
                                                 exV = 0
                                                 if conflict < 1:
                                                     coverRate += 1
-                                                    conflict +=1
+                                                    conflict += 1
                                             coverRate += 1
-                                    #print("I was here quarter 3")
+                                    # print("I was here quarter 3")
                                 # quater 4
                                 else:
                                     if k - i < center[1] - center[0]:
@@ -692,7 +718,7 @@ class Seeker:
                                                 exV = 0
                                                 if conflict < 1:
                                                     coverRate += 1
-                                                    conflict +=1
+                                                    conflict += 1
                                             coverRate += 1
                                     else:
                                         if not (self.isValidInVision(i, k + 1)): continue
@@ -717,11 +743,41 @@ class Seeker:
                                                     coverRate += 1
                                                     conflict += 1
                                             coverRate += 1
-                                    #print("I was here quarter 4")
+                                    # print("I was here quarter 4")
 
-                    #print('not stuck!')
+                    # print('not stuck!')
 
-            #print("I was here", visibleNarrow)
+            # print("I was here", visibleNarrow)
             visibleNarrow += 1
 
-        #print("I was here final")
+        # print("I was here final")
+
+    def findHider(self):
+        vision_x = 0
+        vision_y = 0
+        for i in range(0, len(self.vision)):
+            for j in range(0, len(self.vision[i])):
+                if self.vision[i][j] == 3:
+                    vision_x = i
+                    vision_y = j
+                    break
+        for i in range(0, len(self.vision)):
+            for j in range(0, len(self.vision[i])):
+                if self.vision[i][j] == 2:
+                    temp = []
+                    #hider_x = self.Sx - (3 - i)
+                    #hider_y = self.Sy - (3 - j)
+                    hider_x = self.Sx + (i-vision_x)
+                    hider_y = self.Sy + (j-vision_y)
+                    temp.append(hider_x)
+                    temp.append(hider_y)
+                    flag = False
+                    for k in self.hiderPositionList:
+                        if k[0] == hider_x and k[1] == hider_y:
+                            flag = True
+                            break
+                    if flag == False:
+                        self.hiderPositionList.append(temp)
+
+        return self.hiderPositionList
+

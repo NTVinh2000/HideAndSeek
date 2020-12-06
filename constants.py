@@ -12,7 +12,7 @@ WALL_ID = 1
 HIDER_ID = 2
 SEEKER_ID = 3
 OBSTACLE_ID = 4
-
+ANNOUNCE_ID = 5
 
 def load_map(path):
     fileMap = open(path, 'r')

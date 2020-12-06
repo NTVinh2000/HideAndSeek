@@ -1,6 +1,6 @@
 import pygame
 from constants import *
-mapInfo = load_map('map/map5.txt')
+mapInfo = load_map('map/map4.txt')
 from constants import *
 from board import Board
 from seeker import Seeker
@@ -19,9 +19,12 @@ def pause():
                     pause = False
 
 def main():
+
     #init board
     board = Board()
-
+    catchingHider = False
+    pathToCurrentHider = []
+    hiderPos = []
     #init seeker
     seeker = Seeker()
     seeker.build_visitMap(mapInfo[0])
@@ -37,7 +40,7 @@ def main():
     for i in range(len(mapInfo[2])):
         hiderList.append(Hider())
         hiderList[i].update(mapInfo[2][i])
-
+    numberOfHiders = len(hiderList)
     #init game
     FPS = 60
     WIN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -55,9 +58,12 @@ def main():
         hiderList[i].drawHider(WIN)
 
     pygame.display.update()
-    pygame.time.wait(300)
+    pygame.time.wait(20)
+
 
     #start game loop
+    turn_count = 0
+
     while running:
         clock.tick(FPS)
 
@@ -72,22 +78,62 @@ def main():
         #seekerOldMove.append(seekerNewMove)
         #if len(seekerOldMove) > 4:
         #    seekerOldMove.pop(0)
-        seekerNewMove = seeker.randomMove(mapInfo[0])
+        turn_count = turn_count+1
+        if len(seeker.hiderPositionList) == 0  :
+            seekerNewMove = seeker.randomMove(mapInfo[0])
+
+        elif len(seeker.hiderPositionList)>0 :
+            hiderPos = seeker.hiderPositionList[0]
+            if catchingHider == False:
+                pathToCurrentHider = seeker.FromStartToEnd(list([seeker.Sx,seeker.Sy]), hiderPos,mapInfo[0])
+                print("hider position:",hiderPos)
+                catchingHider = True
+            seekerNewMove = pathToCurrentHider.pop(0)
+            if seekerNewMove[0] == hiderPos[0] and seekerNewMove[1] == hiderPos[1]:
+                numberOfHiders = numberOfHiders -1
+                catchingHider = False
+                mapInfo[0][hiderPos[0]][hiderPos[1]] = 0
+                seeker.visionScopeUpdate(mapInfo[0])
+                seeker.visibleUpdate()
+                seeker.hiderPositionList.pop(0)
+                for k in range(0,len(hiderList)):
+                    if hiderList[k].Hx ==  hiderPos[0] and hiderList[k].Hy == hiderPos[1]:
+                        hiderList.pop(k)
+                        break
+
+                if numberOfHiders ==0:
+                    print("Find all hiders, game over")
+                    return
+
+        if turn_count%3 == 0:
+            for i in hiderList:
+                i.announce(mapInfo[0])
+        #seekerNewMove = seeker.randomMove(mapInfo[0])
         if (seekerNewMove is None):
             print('game over')
             return
-        seeker.update(seekerNewMove, mapInfo[0])
 
+        seeker.update(seekerNewMove, mapInfo[0])
+        seeker.findHider()
         #draw
         board.draw_board(WIN, mapInfo[0])
         seeker.drawVison(WIN, mapInfo[0])
         seeker.drawSeeker(WIN)
 
+
         for i in range(len(hiderList)):
             hiderList[i].drawHider(WIN)
+        for i in seeker.vision:
+            print(i)
+        print("X of seeker:", seeker.Sx)
+        print("Y of seeker:", seeker.Sy, "\n")
+        #print hider location
+        print(" hider position list that seeker found", seeker.hiderPositionList)
+
+
 
         pygame.display.update()
-        pygame.time.wait(150)
+        pygame.time.wait(50)
 
     pygame.quit()
 
