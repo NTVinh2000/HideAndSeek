@@ -1,5 +1,7 @@
 import pygame
 from constants import *
+from random import seed
+from random import randint
 mapInfo = load_map('map/map4.txt')
 from constants import *
 from board import Board
@@ -42,7 +44,6 @@ def main():
         hiderList.append(Hider())
         hiderList[i].update(mapInfo[2][i],mapInfo[0])
     numberOfHiders = len(hiderList)
-    list_hider_goals = []
     #init game
     FPS = 60
     WIN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -84,6 +85,22 @@ def main():
 
         if level >=3:
             for i in range(len(hiderList)):
+                danger = 0
+                for curX in range(hiderList[i].Sx-2, hiderList[i].Sx+3):
+                    for curY in range(hiderList[i].Sy-2, hiderList[i].Sy+3):
+                        if (curX < 1 or curX > ROW - 2 or curY < 1 or curY > COL - 2):
+                            continue
+                        if (mapInfo[0][curX][curY]==3):
+                            danger = 1
+                if (danger):
+                    new_move = hiderList[i].run(mapInfo[0])
+                    randVal = randint(0, 100)
+                    if (randVal%2):
+                        new_move = (hiderList[i].Sx,hiderList[i].Sy)
+                    hiderList[i].update(new_move,mapInfo[0])
+
+                    continue
+
                 new_move =hiderList[i].get_goal(mapInfo[0],1000)
                 hiderList[i].update(new_move,mapInfo[0])
 

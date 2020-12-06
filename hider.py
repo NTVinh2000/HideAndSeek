@@ -35,6 +35,33 @@ class Hider:
     def drawAnnouce(self, win, row, col):
         win.blit(Hider.annouceIcon, (col * SQUARE_SIZE, row * SQUARE_SIZE))
 
+    def run(self, map):
+        Ix = [-1, -1, -1, 0, 1, 1,  1,  0]
+        Iy = [-1,  0,  1, 1, 1, 0, -1, -1]
+        minX = self.Sx
+        minY = self.Sy
+        minVal = 100000
+        for i in range(8):
+            newPosX = self.Sx+Ix[i]
+            newPosY = self.Sy+Iy[i]
+            if (newPosX < 1 or newPosX > ROW - 2 or newPosY < 1 or newPosY > COL - 2):
+                continue
+            cnt = 0
+            if map[newPosX][newPosY] > 0:
+                continue
+            cnt += self.get_state(map, [newPosX,newPosY])
+            Ixx = [-1, 1, 0, 0]
+            Iyy = [0, 0, -1, 1]
+            for j in range(4):
+                if map[newPosX+Ixx[j]][newPosY+Iyy[j]]==3:
+                    cnt +=100
+            if (cnt<minVal):
+                minVal = cnt
+                minX = newPosX
+                minY = newPosY
+        return (minX,minY)
+
+
     def get_state(self, map, pos):
         Ix = [-1, 1, 0, 0]
         Iy = [0, 0, -1, 1]
