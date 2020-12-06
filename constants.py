@@ -6,13 +6,16 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (252, 252, 252)
 PINK = (255, 192, 203)
+AQUA = (175, 238, 238)
+GREEN = (152, 251, 152)
+
 COVERED = -1
 VISIBLE = 0
 WALL_ID = 1
 HIDER_ID = 2
 SEEKER_ID = 3
 OBSTACLE_ID = 4
-
+ANNOUNCE_ID = 5
 
 def load_map(path):
     fileMap = open(path, 'r')
