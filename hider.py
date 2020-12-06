@@ -28,21 +28,19 @@ class Hider:
         win.blit(Hider.icon, (self.Sy * SQUARE_SIZE, self.Sx * SQUARE_SIZE))
 
     def get_state(self, map, pos):
-        Ix = [-1, -1, -1, 0, 1, 1,  1,  0]
-        Iy = [-1,  0,  1, 1, 1, 0, -1, -1]
+        Ix = [-1, 1, 0, 0]
+        Iy = [0, 0, -1, 1]
         cnt = 0
-        for i in range(8):
+        for i in range(4):
             posX = pos[0]+Ix[i]
             posY = pos[1]+Iy[i]
             if (map[posX][posY] == 1):
                 cnt +=1
-            if (map[posX][posY] == 3):
-                cnt = -100
+            #if (map[posX][posY] == 3):
+            #    cnt -= 1000
         return cnt
 
-    def get_goal(self, dd, map, longest):
-        if dd is None:
-            dd = np.zeros((ROW,COL))
+    def get_goal(self, map, longest):
         Ix = [-1, -1, -1, 0, 1, 1,  1,  0]
         Iy = [-1,  0,  1, 1, 1, 0, -1, -1]
         queue = np.array([(self.Sx,self.Sy,0)])
@@ -66,7 +64,7 @@ class Hider:
                 newPosY = cur[1] + Iy[i]
                 if (newPosX < 1 or newPosX > ROW-2 or newPosY < 1 or newPosY > COL-2):
                     continue
-                if (map[newPosX][newPosY] == 1 or dd[newPosX][newPosY] == 1):
+                if (map[newPosX][newPosY] == 1 or map[newPosX][newPosY] == 3 or map[newPosX][newPosY] == 2):
                     continue
                 val = self.get_state(map,[newPosX,newPosY])
                 if val > maxVal:

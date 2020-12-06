@@ -65,7 +65,7 @@ def main():
 
     #start game loop
     turn_count = 0
-    hider_time = 20
+    hider_time = 5
     while running:
         clock.tick(FPS)
 
@@ -81,7 +81,13 @@ def main():
         #if len(seekerOldMove) > 4:
         #    seekerOldMove.pop(0)
         turn_count = turn_count+1
-        if turn_count >hider_time or level <3:
+
+        if level >=3:
+            for i in range(len(hiderList)):
+                new_move =hiderList[i].get_goal(mapInfo[0],1000)
+                hiderList[i].update(new_move,mapInfo[0])
+
+        if turn_count >hider_time:
             if len(seeker.hiderPositionList) == 0  :
                 seekerNewMove = seeker.randomMove(mapInfo[0])
 
@@ -99,12 +105,16 @@ def main():
                     seeker.visionScopeUpdate(mapInfo[0])
                     seeker.visibleUpdate()
                     seeker.hiderPositionList.pop(0)
+                    print('need to pop: ',seekerNewMove)
+                    for i in range(len(hiderList)):
+                        print(hiderList[i].Sx,hiderList[i].Sy)
+                    
                     for k in range(0,len(hiderList)):
                         if hiderList[k].Sx ==  hiderPos[0] and hiderList[k].Sy == hiderPos[1]:
                             hiderList.pop(k)
                             break
 
-                    if numberOfHiders == 0:
+                    if len(hiderList) ==0:
                         print("Find all hiders, game over")
                         return
 
@@ -118,12 +128,8 @@ def main():
 
             seeker.update(seekerNewMove, mapInfo[0])
             seeker.findHider()
-        else:
-            dd = np.zeros((ROW,COL))
-            for i in range(len(hiderList)):
-                new_move =hiderList[i].get_goal(dd,mapInfo[0],hider_time-turn_count+1)
-                dd[new_move[0]][new_move[1]] = 1
-                hiderList[i].update(new_move,mapInfo[0])
+
+
                 
 
 
