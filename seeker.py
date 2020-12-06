@@ -845,7 +845,7 @@ class Seeker:
                         temp = 0
                     else:
                         temp = -1*len(self.FromStartToEnd(list([self.Sx,self.Sy]),i,map))
-                    A = temp  + self.heuristic(i,map,self.currentTime,self.visitMap,self.announceArea)[0]
+                    A = temp  + -1*self.heuristic(i,map,self.currentTime,self.visitMap,self.announceArea)[0]
                     if A > max:
                         max = A
                         temp_x=i[0]

@@ -637,7 +637,7 @@ class Hider:
                         if map[i][j] == 0:
                             self.CoveredList.add((i,j))
 
-
+            """
             for i in range(self.Sx-3,self.Sx+3):
                 for j in range(self.Sy-3,self.Sy+3):
                     if i > 1 and i < len(map) - 1 and j > 1 and j < len(map[0]) - 1:
@@ -646,8 +646,11 @@ class Hider:
                             map[self.announcePos[0]][self.announcePos[1]] = 5
                             print("Announce at:",self.announcePos)
                             return
-
-
+            """
+            self.announcePos = random.sample(self.CoveredList, 1)[0]
+            map[self.announcePos[0]][self.announcePos[1]] = 5
+            print("Announce at:", self.announcePos)
+            return
 
     def drawAnnounce(self,win):
         if len(self.announcePos)>0:

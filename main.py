@@ -195,7 +195,7 @@ def main():
         for i in range(len(hiderList)):
             hiderList[i].drawHider(WIN)
         for i in hiderList:
-            if turn_count >= 7 :
+            if turn_count >= 30 :
                 i.announce(WIN,mapInfo[0])
             i.drawAnnounce(WIN)
         #for i in seeker.vision:
